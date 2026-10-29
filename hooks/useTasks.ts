@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskChanges, createTask, deleteTask, getTasks, updateTask } from '@/lib/api';
 
+// Keep the skeleton on screen long enough to read as a loading state instead of a flicker.
+const MIN_SKELETON_MS = 600;
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const newestFirst = (a: Task, b: Task) => b.id - a.id;
 
 /**
@@ -20,8 +24,8 @@ export function useTasks() {
   // State starts as "loading", so it is only set once the request settles.
   const fetchTasks = useCallback(
     () =>
-      getTasks()
-        .then((list) => {
+      Promise.all([getTasks(), wait(MIN_SKELETON_MS)])
+        .then(([list]) => {
           setTasks(list);
           setLoadError('');
         })
